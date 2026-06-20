@@ -1,19 +1,38 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
 use anyhow::Result;
 use indicatif::ProgressBar;
 
+use std::f64::INFINITY;
+
 use crate::{
     color::{Color, write_color},
+    hittable::{HitRecord, Hittable},
+    hittable_list::HittableList,
+    interval::Interval,
     ray::Ray,
+    sphere::Sphere,
     vector::{Point3, Vec3},
 };
 
 mod color;
+mod constants;
+mod hittable;
+mod hittable_list;
+mod interval;
 mod prelude;
 mod ray;
+mod sphere;
 mod vector;
 
-fn ray_color(ray: &Ray) -> Color {
+fn ray_color(ray: &Ray, world: &HittableList) -> Color {
+    let mut rec = HitRecord::default();
+
+    let interval = Interval::from(0.0, INFINITY);
+
+    if world.hit(ray, interval, &mut rec) {
+        return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
+    }
+
     let unit_dirction = ray.dir().unit_vector();
     let a = 0.5 * (unit_dirction.y() + 1.0);
     (Color::new(1.0, 1.0, 1.0) * (1.0 - a)) + (Color::new(0.5, 0.7, 1.0) * a)
@@ -24,6 +43,11 @@ fn main() -> Result<()> {
     let aspect_ratio = 16.0 / 9.0;
     let image_width: u64 = 400;
     let image_height: u64 = ((image_width as f64) / aspect_ratio) as u64;
+
+    // world
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // camera
     let focal_length = 1.0;
@@ -61,7 +85,7 @@ fn main() -> Result<()> {
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color(&ray, &world);
             write_color(&mut std::io::stdout(), &pixel_color)?;
         }
     }

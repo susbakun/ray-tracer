@@ -10,12 +10,12 @@ impl Ray {
         Self { origin, dir }
     }
 
-    pub fn origin(&self) -> &Point3 {
-        &self.origin
+    pub fn origin(&self) -> Point3 {
+        self.origin
     }
 
-    pub fn dir(&self) -> &Vec3 {
-        &self.dir
+    pub fn dir(&self) -> Vec3 {
+        self.dir
     }
 
     pub fn at(&self, t: f64) -> Point3 {
