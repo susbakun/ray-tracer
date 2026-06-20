@@ -1,11 +1,7 @@
-pub trait Dot {
-    type Output;
+mod constants;
+mod traits;
+mod utils;
 
-    fn dot(self, rhs: Self) -> Self::Output;
-}
-
-pub trait Cross {
-    type Output;
-
-    fn cross(self, rhs: Self) -> Self::Output;
-}
+pub use constants::*;
+pub use traits::*;
+pub use utils::*;
