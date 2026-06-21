@@ -9,8 +9,8 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    prelude::{random_number_range, random_number01},
-    ray::{self, Ray},
+    prelude::{random_number01, random_unit_vector},
+    ray::Ray,
     vector::{Point3, Vec3},
 };
 
@@ -19,6 +19,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: u64,
     pub samples_per_pixel: u64,
+    pub max_depth: u64,
     image_height: u64,
     center: Point3,
     pixel00_lc: Point3,
@@ -78,7 +79,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i as f64, j as f64);
-                    let color = Self::ray_color(&ray, world);
+                    let color = self.ray_color(&ray, self.max_depth, world);
                     pixel_color += color;
                 }
                 pixel_color *= self.pixel_samples_scale;
@@ -103,13 +104,19 @@ impl Camera {
         Ray::new(ray_origin, dir)
     }
 
-    fn ray_color(ray: &Ray, world: &HittableList) -> Color {
+    fn ray_color(&mut self, ray: &Ray, depth: u64, world: &HittableList) -> Color {
+        if depth == 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         let mut rec = HitRecord::default();
 
-        let interval = Interval::from(0.0, INFINITY);
+        let interval = Interval::from(0.001, INFINITY);
 
         if world.hit(ray, interval, &mut rec) {
-            return (rec.normal + Color::new(1.0, 1.0, 1.0)) * 0.5;
+            // biased towards the normal
+            let dir = rec.normal + random_unit_vector(&mut self.rng);
+            return self.ray_color(&Ray::new(rec.p, dir), depth - 1, world) * 0.5;
         }
 
         let unit_dirction = ray.dir().unit_vector();
