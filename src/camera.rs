@@ -9,7 +9,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    prelude::{random_number01, random_unit_vector},
+    prelude::random_number01,
     ray::Ray,
     vector::{Point3, Vec3},
 };
@@ -115,8 +115,16 @@ impl Camera {
 
         if world.hit(ray, interval, &mut rec) {
             // biased towards the normal
-            let dir = rec.normal + random_unit_vector(&mut self.rng);
-            return self.ray_color(&Ray::new(rec.p, dir), depth - 1, world) * 0.5;
+            let mut scattered = Ray::default();
+            let mut attenuation = Color::default();
+
+            if rec
+                .material
+                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut self.rng)
+            {
+                return self.ray_color(&scattered, depth - 1, world) * attenuation;
+            }
+            return Color::new(0.0, 0.0, 0.0);
         }
 
         let unit_dirction = ray.dir().unit_vector();

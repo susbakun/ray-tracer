@@ -33,7 +33,7 @@ impl Hittable for HittableList {
             if obj.hit(ray, interval, &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec;
+                std::mem::swap(rec, &mut temp_rec);
             }
         }
 

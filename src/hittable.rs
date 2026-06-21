@@ -1,16 +1,31 @@
+use std::rc::Rc;
+
 use crate::{
     interval::Interval,
+    material::{Lambertian, Material},
     prelude::Dot,
     ray::Ray,
     vector::{Point3, Vec3},
 };
 
-#[derive(Default, Clone, Copy)]
 pub struct HitRecord {
     pub t: f64,
     pub p: Point3,
     pub normal: Vec3,
     pub front_face: bool,
+    pub material: Rc<dyn Material>,
+}
+
+impl Default for HitRecord {
+    fn default() -> Self {
+        Self {
+            material: Rc::new(Lambertian::default()),
+            t: 0.0,
+            p: Point3::default(),
+            normal: Vec3::default(),
+            front_face: false,
+        }
+    }
 }
 
 impl HitRecord {

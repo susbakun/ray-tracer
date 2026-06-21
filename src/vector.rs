@@ -43,7 +43,17 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self) -> Self {
-        self.clone() / self.length()
+        *self / self.length()
+    }
+
+    pub fn near_zero(&self) -> bool {
+        // return true if the vector is close to zero in all dimensions.
+        let s = 1e-8;
+        self.x < s && self.y < s && self.z < s
+    }
+
+    pub fn reflect(&self, n: &Vec3) -> Self {
+        *self - (*n * self.dot(*n)) * 2.0
     }
 }
 
