@@ -1,6 +1,10 @@
 use rand::{RngExt, rngs::ThreadRng};
 
-use crate::{interval::Interval, prelude::Dot, vector::Vec3};
+use crate::{
+    interval::Interval,
+    prelude::Dot,
+    vector::{Point3, Vec3},
+};
 
 pub fn random_number01(rng: &mut ThreadRng) -> f64 {
     rng.random::<f64>()
@@ -43,5 +47,20 @@ pub fn random_on_hemisphere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
         on_unit_hemisphere
     } else {
         -on_unit_hemisphere
+    }
+}
+
+pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Point3 {
+    loop {
+        let range = Interval::from(-1.0, 1.0);
+        let p = Point3::new(
+            random_number_range(rng, range),
+            random_number_range(rng, range),
+            0.0,
+        );
+        let lensq = p.length_squared();
+        if lensq <= 1.0 {
+            return p / lensq;
+        }
     }
 }

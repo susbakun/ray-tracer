@@ -9,7 +9,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    prelude::{Cross, random_number01},
+    prelude::{Cross, random_in_unit_disk, random_number01},
     ray::Ray,
     vector::{Point3, Vec3},
 };
@@ -24,6 +24,8 @@ pub struct Camera {
     pub vup: Vec3,
     pub lookfrom: Point3,
     pub lookat: Point3,
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
     image_height: u64,
     center: Point3,
     pixel00_lc: Point3,
@@ -34,6 +36,8 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     w: Vec3,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -48,10 +52,9 @@ impl Camera {
         self.pixel_samples_scale = 1.0 / (self.samples_per_pixel as f64);
 
         // viewport dimensions
-        let focal_length = (self.lookfrom - self.lookat).length();
         let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_dist;
         let viewport_width =
             viewport_height * ((self.image_width as f64) / (self.image_height as f64));
 
@@ -70,8 +73,13 @@ impl Camera {
 
         // calculate the location of the upper left pixel.
         let viewport_upper_left =
-            self.center - (self.w * focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.w * self.focus_dist) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel00_lc = viewport_upper_left + (self.pixel_delta_u + self.pixel_delta_v) * 0.5;
+
+        // calculate the camera defocus disk basis vectors.
+        let defocus_radius = self.focus_dist * ((self.defocus_angle / 2.0).to_radians()).tan();
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
     }
 
     pub fn render(&mut self, world: &HittableList) -> Result<()> {
@@ -86,6 +94,7 @@ impl Camera {
         println!("{} {}", self.image_width, self.image_height);
         println!("255");
 
+        // TODO: show prgress in percentage
         pb.println("Progress:");
         for j in 0..self.image_height {
             pb.inc(1);
@@ -112,7 +121,12 @@ impl Camera {
             + (self.pixel_delta_u * (offset.x() + i))
             + (self.pixel_delta_v * (offset.y() + j));
 
-        let ray_origin = self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
+
         let dir = pixel_sample - ray_origin;
 
         Ray::new(ray_origin, dir)
@@ -152,5 +166,11 @@ impl Camera {
             random_number01(&mut self.rng) - 0.5,
             0.0,
         )
+    }
+
+    fn defocus_disk_sample(&mut self) -> Vec3 {
+        let p = random_in_unit_disk(&mut self.rng);
+
+        self.center + (self.defocus_disk_u * p.x()) + (self.defocus_disk_v * p.y())
     }
 }
