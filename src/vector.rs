@@ -55,6 +55,14 @@ impl Vec3 {
     pub fn reflect(&self, n: &Vec3) -> Self {
         *self - (*n * self.dot(*n)) * 2.0
     }
+
+    pub fn refract(&self, normal: &Vec3, etai_over_etat: f64) -> Self {
+        let cos_theta = (-self.dot(*normal)).min(1.0);
+        let r_out_perp = (*self + (*normal * cos_theta)) * etai_over_etat;
+        let r_out_parallel = *normal * -((1.0 - r_out_perp.length_squared()).abs()).sqrt();
+
+        r_out_perp + r_out_parallel
+    }
 }
 
 pub type Point3 = Vec3;
