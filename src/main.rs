@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::rc::Rc;
+use std::{f64::consts::PI, rc::Rc};
 
 use anyhow::Result;
 
@@ -9,7 +9,7 @@ use crate::{
     hittable_list::HittableList,
     material::{Dielectric, Lambertian, Metal},
     sphere::Sphere,
-    vector::Point3,
+    vector::{Point3, Vec3},
 };
 
 mod camera;
@@ -43,8 +43,6 @@ fn main() -> Result<()> {
         0.5,
         material_center,
     )));
-
-    // hollow glass
     world.add(Box::new(Sphere::new(
         Point3::new(-1.0, 0.0, -1.0),
         0.5,
@@ -55,7 +53,6 @@ fn main() -> Result<()> {
         0.4,
         material_bubble,
     )));
-
     world.add(Box::new(Sphere::new(
         Point3::new(1.0, 0.0, -1.0),
         0.5,
@@ -68,6 +65,11 @@ fn main() -> Result<()> {
     camera.image_width = 400;
     camera.samples_per_pixel = 100;
     camera.max_depth = 50;
+
+    camera.vfov = 20.0;
+    camera.lookfrom = Point3::new(-2.0, 2.0, 1.0);
+    camera.lookat = Point3::new(0.0, 0.0, -1.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
 
     camera.render(&world)?;
 
