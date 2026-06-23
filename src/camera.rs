@@ -1,7 +1,7 @@
-use std::f64::INFINITY;
+use std::{f64::INFINITY, fmt::Write};
 
 use anyhow::Result;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use rand::prelude::*;
 
 use crate::{
@@ -88,14 +88,22 @@ impl Camera {
         // progressbar
         let total = self.image_height;
         let pb = ProgressBar::new(total);
+        pb.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
+            )
+            .unwrap()
+            .with_key("eta", |state: &ProgressState, w: &mut dyn Write| {
+                write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+            })
+            .progress_chars("#>-"),
+        );
 
         // render
         println!("P3");
         println!("{} {}", self.image_width, self.image_height);
         println!("255");
 
-        // TODO: show prgress in percentage
-        pb.println("Progress:");
         for j in 0..self.image_height {
             pb.inc(1);
             for i in 0..self.image_width {
