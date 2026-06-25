@@ -5,6 +5,7 @@ use anyhow::Result;
 use rand::rng;
 
 use crate::{
+    bvh::BVH,
     camera::Camera,
     color::Color,
     hittable_list::HittableList,
@@ -15,6 +16,8 @@ use crate::{
     vector::{Point3, Vec3},
 };
 
+mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable;
@@ -33,7 +36,7 @@ fn main() -> Result<()> {
     let mut world = HittableList::new();
 
     let ground_material = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new_stationary(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -53,42 +56,64 @@ fn main() -> Result<()> {
                     // diffuse
                     let albedo = random_vector01(&mut rng) * random_vector01(&mut rng);
                     let sphere_material = Rc::new(Lambertian::new(albedo));
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    let center2 = center
+                        + Point3::new(
+                            0.0,
+                            random_number_range(&mut rng, Interval::from(0.0, 0.5)),
+                            0.0,
+                        );
+                    world.add(Rc::new(Sphere::new_moving(
+                        center,
+                        center2,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = random_vector_range(&mut rng, Interval::from(0.5, 1.0));
                     let fuzz = random_number_range(&mut rng, Interval::from(0.0, 0.5));
                     let sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new_stationary(
+                        center,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else {
                     // glass
                     let sphere_material = Rc::new(Dielectric::new(1.5));
-                    world.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new_stationary(
+                        center,
+                        0.2,
+                        sphere_material,
+                    )));
                 }
             }
         }
     }
 
     let material1 = Rc::new(Dielectric::new(1.5));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new_stationary(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
 
     let material2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new_stationary(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
 
     let material3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Box::new(Sphere::new(
+    world.add(Rc::new(Sphere::new_stationary(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
+
+    let bvh = Rc::new(BVH::bvh_node(&mut world, &mut rng));
+    world = HittableList::from(bvh);
 
     // camera
     let mut camera = Camera::default();

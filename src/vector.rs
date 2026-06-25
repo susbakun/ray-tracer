@@ -22,6 +22,15 @@ impl Vec3 {
         }
     }
 
+    pub fn get_axis(&self, axis: u8) -> f64 {
+        match axis {
+            0 => self.x,
+            1 => self.y,
+            2 => self.z,
+            _ => unreachable!(),
+        }
+    }
+
     pub const fn x(&self) -> f64 {
         self.x
     }

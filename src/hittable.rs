@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
+    aabb::AABB,
     interval::Interval,
     material::{Lambertian, Material},
     prelude::Dot,
@@ -40,5 +41,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool;
+
+    fn bounding_box(&self) -> &AABB;
 }

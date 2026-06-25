@@ -11,7 +11,7 @@ pub fn random_number01(rng: &mut ThreadRng) -> f64 {
 }
 
 pub fn random_number_range(rng: &mut ThreadRng, range: Interval) -> f64 {
-    rng.random_range(range.min..range.max)
+    rng.random_range(range.min..=range.max)
 }
 
 pub fn random_vector01(rng: &mut ThreadRng) -> Vec3 {
@@ -60,7 +60,7 @@ pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Point3 {
         );
         let lensq = p.length_squared();
         if lensq <= 1.0 {
-            return p / lensq;
+            return p;
         }
     }
 }

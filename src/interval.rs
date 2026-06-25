@@ -6,14 +6,16 @@ pub struct Interval {
     pub max: f64,
 }
 
-impl Interval {
-    pub const fn new() -> Self {
+impl Default for Interval {
+    fn default() -> Self {
         Self {
             min: -INFINITY,
             max: INFINITY,
         }
     }
+}
 
+impl Interval {
     pub const fn from(min: f64, max: f64) -> Self {
         Self { min, max }
     }
@@ -26,6 +28,10 @@ impl Interval {
         self.min < x && x < self.max
     }
 
+    pub fn size(&self) -> f64 {
+        self.max - self.min
+    }
+
     pub fn clamp(&self, x: f64) -> f64 {
         if x < self.min {
             self.min
@@ -35,7 +41,22 @@ impl Interval {
             x
         }
     }
+
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta / 2.0;
+        Self {
+            min: self.min - padding,
+            max: self.max + padding,
+        }
+    }
+
+    pub fn sort_two_intervals(a: Interval, b: Interval) -> Self {
+        let min = if a.min < b.min { a.min } else { b.min };
+        let max = if a.max > b.max { a.max } else { b.max };
+
+        Interval { min, max }
+    }
 }
 
-const EMPTY: Interval = Interval::from(INFINITY, -INFINITY);
-const UNIVERSE: Interval = Interval::from(-INFINITY, INFINITY);
+pub const EMPTY: Interval = Interval::from(INFINITY, -INFINITY);
+pub const UNIVERSE: Interval = Interval::from(-INFINITY, INFINITY);

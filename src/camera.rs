@@ -136,8 +136,9 @@ impl Camera {
         };
 
         let dir = pixel_sample - ray_origin;
+        let ray_time = random_number01(&mut self.rng);
 
-        Ray::new(ray_origin, dir)
+        Ray::new_with_time(ray_origin, dir, ray_time)
     }
 
     fn ray_color(&mut self, ray: &Ray, depth: u64, world: &HittableList) -> Color {
@@ -147,9 +148,9 @@ impl Camera {
 
         let mut rec = HitRecord::default();
 
-        let interval = Interval::from(0.001, INFINITY);
+        let mut interval = Interval::from(0.001, INFINITY);
 
-        if world.hit(ray, interval, &mut rec) {
+        if world.hit(ray, &mut interval, &mut rec) {
             // biased towards the normal
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
