@@ -13,7 +13,7 @@ use crate::{
     material::{Dielectric, Lambertian, Metal},
     prelude::{random_number_range, random_number01, random_vector_range, random_vector01},
     sphere::Sphere,
-    texture::{CheckerTexture, ImageTexture},
+    texture::{CheckerTexture, ImageTexture, NoiseTexture},
     vector::{Point3, Vec3},
 };
 
@@ -25,6 +25,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod perlin;
 mod prelude;
 mod ray;
 mod rtw_image;
@@ -205,12 +206,49 @@ fn earth() -> Result<()> {
     Ok(())
 }
 
+fn perlin_spheres() -> Result<()> {
+    let mut world = HittableList::new();
+
+    let pertext = Rc::new(NoiseTexture::new(4.0));
+    let lamper = Rc::new(Lambertian::from(pertext));
+
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        lamper.clone(),
+    )));
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        lamper.clone(),
+    )));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+
+    camera.vfov = 20.0;
+    camera.lookfrom = Point3::new(13.0, 2.0, 3.0);
+    camera.lookat = Point3::new(0.0, 0.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 10.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    let scene = 3;
+    let scene = 4;
     match scene {
         1 => bouncing_sphere(),
         2 => checked_spheres(),
         3 => earth(),
+        4 => perlin_spheres(),
         _ => unreachable!(),
     }
 }

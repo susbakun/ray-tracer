@@ -2,7 +2,9 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use crate::{color::Color, interval::Interval, rtw_image::RTWImage, vector::Point3};
+use crate::{
+    color::Color, interval::Interval, perlin::Perlin, rtw_image::RTWImage, vector::Point3,
+};
 
 pub trait Texture {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -103,5 +105,25 @@ impl Texture for ImageTexture {
         let pixeld_data = self.image.pixel_data(i, j);
 
         Color::from(pixeld_data)
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+    scale: f64,
+}
+
+impl NoiseTexture {
+    pub fn new(scale: f64) -> Self {
+        let noise = Perlin::new(256);
+
+        Self { noise, scale }
+    }
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
+        Color::new(0.5, 0.5, 0.5)
+            * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turb(&p, 7)).sin())
     }
 }
