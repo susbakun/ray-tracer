@@ -18,19 +18,19 @@ impl AABB {
 
     pub fn from_point(a: Point3, b: Point3) -> Self {
         let x = if a.x() <= b.x() {
-            Interval::from(a.x(), b.x())
+            Interval::new(a.x(), b.x())
         } else {
-            Interval::from(b.x(), a.x())
+            Interval::new(b.x(), a.x())
         };
         let y = if a.y() <= b.y() {
-            Interval::from(a.y(), b.y())
+            Interval::new(a.y(), b.y())
         } else {
-            Interval::from(b.y(), a.y())
+            Interval::new(b.y(), a.y())
         };
         let z = if a.z() <= b.z() {
-            Interval::from(a.z(), b.z())
+            Interval::new(a.z(), b.z())
         } else {
-            Interval::from(b.z(), a.z())
+            Interval::new(b.z(), a.z())
         };
         Self { x, y, z }
     }

@@ -44,7 +44,7 @@ impl Hittable for HittableList {
         let mut closest_so_far = ray_t.max;
 
         for obj in &self.objects {
-            let mut interval = Interval::from(ray_t.min, closest_so_far);
+            let mut interval = Interval::new(ray_t.min, closest_so_far);
 
             if obj.hit(ray, &mut interval, &mut temp_rec) {
                 hit_anything = true;

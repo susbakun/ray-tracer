@@ -12,7 +12,7 @@ pub fn write_color(output: &mut Stdout, pixel_color: &Color) -> Result<()> {
     let g = pixel_color.y();
     let b = pixel_color.z();
 
-    let intensity = Interval::from(0.0, 0.999);
+    let intensity = Interval::new(0.0, 0.999);
 
     // apply a linear to gamma transform for gamma 2
     let r = linear_to_gamma(r);

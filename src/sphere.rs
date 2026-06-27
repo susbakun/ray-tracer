@@ -1,3 +1,4 @@
+use std::f64::consts::PI;
 use std::rc::Rc;
 
 use crate::aabb::AABB;
@@ -17,12 +18,13 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new_stationary(static_center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
+        let center = Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0));
         let radius = radius.max(0.0);
         let rvec = Point3::new(radius, radius, radius);
         let bbox = AABB::from_point(static_center - rvec, static_center + rvec);
 
         Self {
-            center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
+            center,
             radius,
             material,
             bbox,
@@ -47,6 +49,14 @@ impl Sphere {
             material,
             bbox,
         }
+    }
+
+    fn set_sphere_uv(p: &Point3, u: &mut f64, v: &mut f64) {
+        let theta = (-p.y()).acos();
+        let phi = -p.z().atan2(p.x()) + PI;
+
+        *u = phi / (2.0 * PI);
+        *v = theta / PI;
     }
 }
 
@@ -75,6 +85,7 @@ impl Hittable for Sphere {
         rec.p = ray.at(rec.t);
         let outward_normal = (rec.p - current_center) / self.radius;
         rec.set_face_normal(ray, outward_normal);
+        Self::set_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
         rec.material = Rc::clone(&self.material);
 
         true

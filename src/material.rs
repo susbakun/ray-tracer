@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use rand::rngs::ThreadRng;
 
 use crate::{
@@ -5,6 +7,7 @@ use crate::{
     hittable::HitRecord,
     prelude::{Dot, random_number01, random_unit_vector},
     ray::Ray,
+    texture::{SolidColor, Texture},
 };
 
 pub trait Material {
@@ -20,14 +23,26 @@ pub trait Material {
     }
 }
 
-#[derive(Default)]
 pub struct Lambertian {
-    albedo: Color,
+    tex: Rc<dyn Texture>,
+}
+
+impl Default for Lambertian {
+    fn default() -> Self {
+        Self {
+            tex: Rc::new(SolidColor::new(0.0, 0.0, 0.0)),
+        }
+    }
 }
 
 impl Lambertian {
     pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+        let tex = Rc::new(SolidColor::from(albedo));
+        Self { tex }
+    }
+
+    pub fn from(tex: Rc<dyn Texture>) -> Self {
+        Self { tex }
     }
 }
 
@@ -46,7 +61,7 @@ impl Material for Lambertian {
         }
 
         *scattered = Ray::new_with_time(rec.p, scatter_direction, ray_in.time());
-        *attenuation = self.albedo;
+        *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
         true
     }
 }

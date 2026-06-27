@@ -95,7 +95,7 @@ impl Hittable for BVH {
         let right_t = if hit_left { rec.t } else { ray_t.max };
         let hit_right = self
             .right
-            .hit(ray, &mut Interval::from(ray_t.min, right_t), rec);
+            .hit(ray, &mut Interval::new(ray_t.min, right_t), rec);
 
         hit_left || hit_right
     }

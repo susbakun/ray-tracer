@@ -15,6 +15,8 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub front_face: bool,
     pub material: Rc<dyn Material>,
+    pub u: f64,
+    pub v: f64,
 }
 
 impl Default for HitRecord {
@@ -25,6 +27,8 @@ impl Default for HitRecord {
             p: Point3::default(),
             normal: Vec3::default(),
             front_face: false,
+            u: 0.0,
+            v: 0.0,
         }
     }
 }

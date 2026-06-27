@@ -148,7 +148,7 @@ impl Camera {
 
         let mut rec = HitRecord::default();
 
-        let mut interval = Interval::from(0.001, INFINITY);
+        let mut interval = Interval::new(0.001, INFINITY);
 
         if world.hit(ray, &mut interval, &mut rec) {
             // biased towards the normal

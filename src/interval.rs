@@ -16,7 +16,7 @@ impl Default for Interval {
 }
 
 impl Interval {
-    pub const fn from(min: f64, max: f64) -> Self {
+    pub const fn new(min: f64, max: f64) -> Self {
         Self { min, max }
     }
 
@@ -58,5 +58,5 @@ impl Interval {
     }
 }
 
-pub const EMPTY: Interval = Interval::from(INFINITY, -INFINITY);
-pub const UNIVERSE: Interval = Interval::from(-INFINITY, INFINITY);
+pub const EMPTY: Interval = Interval::new(INFINITY, -INFINITY);
+pub const UNIVERSE: Interval = Interval::new(-INFINITY, INFINITY);

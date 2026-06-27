@@ -13,6 +13,7 @@ use crate::{
     material::{Dielectric, Lambertian, Metal},
     prelude::{random_number_range, random_number01, random_vector_range, random_vector01},
     sphere::Sphere,
+    texture::{CheckerTexture, ImageTexture},
     vector::{Point3, Vec3},
 };
 
@@ -26,10 +27,12 @@ mod interval;
 mod material;
 mod prelude;
 mod ray;
+mod rtw_image;
 mod sphere;
+mod texture;
 mod vector;
 
-fn main() -> Result<()> {
+fn bouncing_sphere() -> Result<()> {
     let mut rng = rng();
 
     // world
@@ -59,7 +62,7 @@ fn main() -> Result<()> {
                     let center2 = center
                         + Point3::new(
                             0.0,
-                            random_number_range(&mut rng, Interval::from(0.0, 0.5)),
+                            random_number_range(&mut rng, Interval::new(0.0, 0.5)),
                             0.0,
                         );
                     world.add(Rc::new(Sphere::new_moving(
@@ -70,8 +73,8 @@ fn main() -> Result<()> {
                     )));
                 } else if choose_mat < 0.95 {
                     // metal
-                    let albedo = random_vector_range(&mut rng, Interval::from(0.5, 1.0));
-                    let fuzz = random_number_range(&mut rng, Interval::from(0.0, 0.5));
+                    let albedo = random_vector_range(&mut rng, Interval::new(0.5, 1.0));
+                    let fuzz = random_number_range(&mut rng, Interval::new(0.0, 0.5));
                     let sphere_material = Rc::new(Metal::new(albedo, fuzz));
                     world.add(Rc::new(Sphere::new_stationary(
                         center,
@@ -133,4 +136,81 @@ fn main() -> Result<()> {
     camera.render(&world)?;
 
     Ok(())
+}
+
+fn checked_spheres() -> Result<()> {
+    let mut world = HittableList::new();
+
+    let checker = Rc::new(CheckerTexture::new(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from(checker.clone())),
+    )));
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from(checker.clone())),
+    )));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+
+    camera.vfov = 20.0;
+    camera.lookfrom = Point3::new(13.0, 2.0, 3.0);
+    camera.lookat = Point3::new(0.0, 0.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 10.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
+fn earth() -> Result<()> {
+    let mut world = HittableList::new();
+
+    let earth_texture = ImageTexture::new("earthmap.jpg")?;
+    let earth_surface = Rc::new(Lambertian::from(Rc::new(earth_texture)));
+    let globe = Sphere::new_stationary(Point3::new(0.0, 0.0, 0.0), 2.0, earth_surface);
+
+    world.add(Rc::new(globe));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+
+    camera.vfov = 20.0;
+    camera.lookfrom = Point3::new(13.0, 2.0, 3.0);
+    camera.lookat = Point3::new(0.0, 0.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 10.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    let scene = 3;
+    match scene {
+        1 => bouncing_sphere(),
+        2 => checked_spheres(),
+        3 => earth(),
+        _ => unreachable!(),
+    }
 }

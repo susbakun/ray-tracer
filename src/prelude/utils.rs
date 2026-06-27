@@ -32,7 +32,7 @@ pub fn random_vector_range(rng: &mut ThreadRng, range: Interval) -> Vec3 {
 
 pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
     loop {
-        let range = Interval::from(-1.0, 1.0);
+        let range = Interval::new(-1.0, 1.0);
         let p = random_vector_range(rng, range);
         let lensq = p.length_squared();
         if 1e-160 < lensq && lensq <= 1.0 {
@@ -52,7 +52,7 @@ pub fn random_on_hemisphere(rng: &mut ThreadRng, normal: &Vec3) -> Vec3 {
 
 pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Point3 {
     loop {
-        let range = Interval::from(-1.0, 1.0);
+        let range = Interval::new(-1.0, 1.0);
         let p = Point3::new(
             random_number_range(rng, range),
             random_number_range(rng, range),
