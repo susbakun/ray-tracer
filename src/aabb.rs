@@ -13,7 +13,10 @@ pub struct AABB {
 
 impl AABB {
     pub const fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { x, y, z }
+        let mut aabb = Self { x, y, z };
+        aabb.pad_to_minimus();
+
+        aabb
     }
 
     pub fn from_point(a: Point3, b: Point3) -> Self {
@@ -32,7 +35,11 @@ impl AABB {
         } else {
             Interval::new(b.z(), a.z())
         };
-        Self { x, y, z }
+
+        let mut aabb = Self { x, y, z };
+        aabb.pad_to_minimus();
+
+        aabb
     }
 
     pub fn from_boxes(box1: &Self, box2: &Self) -> Self {
@@ -40,7 +47,10 @@ impl AABB {
         let y = Interval::sort_two_intervals(box1.y, box2.y);
         let z = Interval::sort_two_intervals(box1.z, box2.z);
 
-        Self::new(x, y, z)
+        let mut aabb = Self::new(x, y, z);
+        aabb.pad_to_minimus();
+
+        aabb
     }
 
     pub const fn axis_interval(&self, n: u8) -> Interval {
@@ -105,6 +115,19 @@ impl AABB {
             }
         }
         true
+    }
+
+    const fn pad_to_minimus(&mut self) {
+        let delta = 0.0001;
+        if self.x.size() < delta {
+            self.x = self.x.expand(delta)
+        }
+        if self.y.size() < delta {
+            self.y = self.y.expand(delta)
+        }
+        if self.z.size() < delta {
+            self.z = self.z.expand(delta)
+        }
     }
 }
 

@@ -12,6 +12,7 @@ use crate::{
     interval::Interval,
     material::{Dielectric, Lambertian, Metal},
     prelude::{random_number_range, random_number01, random_vector_range, random_vector01},
+    quad::Quad,
     sphere::Sphere,
     texture::{CheckerTexture, ImageTexture, NoiseTexture},
     vector::{Point3, Vec3},
@@ -27,6 +28,7 @@ mod interval;
 mod material;
 mod perlin;
 mod prelude;
+mod quad;
 mod ray;
 mod rtw_image;
 mod sphere;
@@ -242,13 +244,75 @@ fn perlin_spheres() -> Result<()> {
     Ok(())
 }
 
+fn quads() -> Result<()> {
+    let mut world = HittableList::new();
+
+    // Materials
+    let left_red = Rc::new(Lambertian::new(Color::new(1.0, 0.2, 0.2)));
+    let back_green = Rc::new(Lambertian::new(Color::new(0.2, 1.0, 0.2)));
+    let right_blue = Rc::new(Lambertian::new(Color::new(0.2, 0.2, 1.0)));
+    let upper_orange = Rc::new(Lambertian::new(Color::new(1.0, 0.5, 0.0)));
+    let lower_teal = Rc::new(Lambertian::new(Color::new(0.2, 0.8, 0.8)));
+
+    // Quads
+    world.add(Rc::new(Quad::new(
+        Point3::new(-3.0, -2.0, 5.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, -2.0, 0.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(3.0, -2.0, 1.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, 3.0, 1.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, -3.0, 5.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
+    )));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 1.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+
+    camera.vfov = 80.0;
+    camera.lookfrom = Point3::new(0.0, 0.0, 9.0);
+    camera.lookat = Point3::new(0.0, 0.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 20.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    let scene = 4;
+    let scene = 5;
     match scene {
         1 => bouncing_sphere(),
         2 => checked_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
+        5 => quads(),
         _ => unreachable!(),
     }
 }
