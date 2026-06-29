@@ -26,6 +26,7 @@ pub struct Camera {
     pub lookat: Point3,
     pub defocus_angle: f64,
     pub focus_dist: f64,
+    pub background_color: Color,
     image_height: u64,
     center: Point3,
     pixel00_lc: Point3,
@@ -150,23 +151,24 @@ impl Camera {
 
         let mut interval = Interval::new(0.001, INFINITY);
 
-        if world.hit(ray, &mut interval, &mut rec) {
-            // biased towards the normal
-            let mut scattered = Ray::default();
-            let mut attenuation = Color::default();
-
-            if rec
-                .material
-                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut self.rng)
-            {
-                return self.ray_color(&scattered, depth - 1, world) * attenuation;
-            }
-            return Color::new(0.0, 0.0, 0.0);
+        if !world.hit(ray, &mut interval, &mut rec) {
+            return self.background_color;
         }
 
-        let unit_dirction = ray.dir().unit_vector();
-        let a = 0.5 * (unit_dirction.y() + 1.0);
-        (Color::new(1.0, 1.0, 1.0) * (1.0 - a)) + (Color::new(0.5, 0.7, 1.0) * a)
+        // biased towards the normal
+        let mut scattered = Ray::default();
+        let mut attenuation = Color::default();
+        let color_from_emission = rec.material.emitted(rec.u, rec.v, rec.p);
+
+        if !rec
+            .material
+            .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut self.rng)
+        {
+            return color_from_emission;
+        }
+
+        let color_from_scatter = self.ray_color(&scattered, depth - 1, world) * attenuation;
+        color_from_scatter + color_from_emission
     }
 
     fn sample_square(&mut self) -> Vec3 {

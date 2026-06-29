@@ -31,6 +31,15 @@ impl Vec3 {
         }
     }
 
+    pub fn set_axis(&mut self, axis: u8, value: f64) {
+        match axis {
+            0 => self.x = value,
+            1 => self.y = value,
+            2 => self.z = value,
+            _ => unreachable!(),
+        }
+    }
+
     pub const fn x(&self) -> f64 {
         self.x
     }
@@ -58,7 +67,7 @@ impl Vec3 {
     pub fn near_zero(&self) -> bool {
         // return true if the vector is close to zero in all dimensions.
         let s = 1e-8;
-        self.x < s && self.y < s && self.z < s
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 
     pub fn reflect(&self, n: &Vec3) -> Self {

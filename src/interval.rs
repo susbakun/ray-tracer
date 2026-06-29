@@ -1,4 +1,4 @@
-use std::f64::INFINITY;
+use std::{f64::INFINITY, ops::Add};
 
 #[derive(Clone, Copy)]
 pub struct Interval {
@@ -55,6 +55,14 @@ impl Interval {
         let max = if a.max > b.max { a.max } else { b.max };
 
         Interval { min, max }
+    }
+}
+
+impl Add<f64> for Interval {
+    type Output = Self;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Self::new(self.min + rhs, self.max + rhs)
     }
 }
 

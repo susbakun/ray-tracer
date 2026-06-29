@@ -36,7 +36,7 @@ pub fn random_unit_vector(rng: &mut ThreadRng) -> Vec3 {
         let p = random_vector_range(rng, range);
         let lensq = p.length_squared();
         if 1e-160 < lensq && lensq <= 1.0 {
-            return p / lensq;
+            return p / lensq.sqrt();
         }
     }
 }

@@ -1,10 +1,12 @@
+use std::ops::Add;
+
 use crate::{
     interval::{self, Interval},
     ray::Ray,
-    vector::Point3,
+    vector::{Point3, Vec3},
 };
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct AABB {
     x: Interval,
     y: Interval,
@@ -128,6 +130,14 @@ impl AABB {
         if self.z.size() < delta {
             self.z = self.z.expand(delta)
         }
+    }
+}
+
+impl Add<Vec3> for AABB {
+    type Output = Self;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Self::new(self.x + rhs.x(), self.y + rhs.y(), self.z + rhs.z())
     }
 }
 

@@ -8,6 +8,7 @@ use crate::{
     prelude::{Dot, random_number01, random_unit_vector},
     ray::Ray,
     texture::{SolidColor, Texture},
+    vector::Point3,
 };
 
 pub trait Material {
@@ -20,6 +21,10 @@ pub trait Material {
         _rng: &mut ThreadRng,
     ) -> bool {
         false
+    }
+
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -145,5 +150,27 @@ impl Material for Dielectric {
         *scattered = Ray::new_with_time(rec.p, direction, ray_in.time());
 
         true
+    }
+}
+
+pub struct DiffuseLight {
+    tex: Rc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(tex: Rc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+
+    pub fn from_color(color: Color) -> Self {
+        let tex = Rc::new(SolidColor::from(color));
+
+        Self { tex }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        self.tex.value(u, v, &p)
     }
 }
