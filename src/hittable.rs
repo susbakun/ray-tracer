@@ -158,7 +158,7 @@ impl Hittable for RotateY {
             (self.sin_theta * ray.dir().x()) + (self.cos_theta * ray.dir().z()),
         );
 
-        let rotated_ray = Ray::new(origin, direction);
+        let rotated_ray = Ray::new_with_time(origin, direction, ray.time());
 
         if !self.object.hit(&rotated_ray, ray_t, rec) {
             return false;
