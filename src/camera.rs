@@ -1,8 +1,12 @@
-use std::{f64::INFINITY, fmt::Write};
+use std::{f64::INFINITY, fmt::Write, sync::Arc};
 
 use anyhow::Result;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use rand::prelude::*;
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    slice::ParallelSliceMut,
+};
 
 use crate::{
     color::{Color, write_color},
@@ -33,7 +37,6 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     pixel_samples_scale: f64,
-    rng: ThreadRng,
     u: Vec3,
     v: Vec3,
     w: Vec3,
@@ -43,9 +46,6 @@ pub struct Camera {
 
 impl Camera {
     fn initilize(&mut self) {
-        // random generator
-        self.rng = rand::rng();
-
         // image
         self.image_height = ((self.image_width as f64) / self.aspect_ratio) as u64;
 
@@ -99,33 +99,49 @@ impl Camera {
             })
             .progress_chars("#>-"),
         );
+        let pb = Arc::new(pb);
 
         // render
         println!("P3");
         println!("{} {}", self.image_width, self.image_height);
         println!("255");
 
-        for j in 0..self.image_height {
-            pb.inc(1);
-            for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(i as f64, j as f64);
-                    let color = self.ray_color(&ray, self.max_depth, world);
-                    pixel_color += color;
-                }
-                pixel_color *= self.pixel_samples_scale;
+        let mut image_buffer =
+            vec![Color::default(); (self.image_height * self.image_width) as usize];
 
-                write_color(&mut std::io::stdout(), &pixel_color)?;
-            }
-        }
+        image_buffer
+            .par_chunks_mut(self.image_width as usize)
+            .enumerate()
+            .for_each(|(j, row)| {
+                pb.inc(1);
+
+                let mut rng = rand::rng();
+
+                for (i, col) in row.iter_mut().enumerate() {
+                    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                    for _ in 0..self.samples_per_pixel {
+                        let ray = self.get_ray(i as f64, j as f64, &mut rng);
+                        let color = self.ray_color(&ray, self.max_depth, world, &mut rng);
+                        pixel_color += color;
+                    }
+                    pixel_color *= self.pixel_samples_scale;
+
+                    *col = pixel_color;
+                }
+            });
+
         pb.finish_with_message("Done!");
+
+        // writing to output
+        for pixel in image_buffer.iter() {
+            write_color(&mut std::io::stdout(), &pixel)?;
+        }
 
         Ok(())
     }
 
-    fn get_ray(&mut self, i: f64, j: f64) -> Ray {
-        let offset = self.sample_square();
+    fn get_ray(&self, i: f64, j: f64, rng: &mut ThreadRng) -> Ray {
+        let offset = self.sample_square(rng);
         let pixel_sample = self.pixel00_lc
             + (self.pixel_delta_u * (offset.x() + i))
             + (self.pixel_delta_v * (offset.y() + j));
@@ -133,16 +149,16 @@ impl Camera {
         let ray_origin = if self.defocus_angle <= 0.0 {
             self.center
         } else {
-            self.defocus_disk_sample()
+            self.defocus_disk_sample(rng)
         };
 
         let dir = pixel_sample - ray_origin;
-        let ray_time = random_number01(&mut self.rng);
+        let ray_time = random_number01(rng);
 
         Ray::new_with_time(ray_origin, dir, ray_time)
     }
 
-    fn ray_color(&mut self, ray: &Ray, depth: u64, world: &HittableList) -> Color {
+    fn ray_color(&self, ray: &Ray, depth: u64, world: &HittableList, rng: &mut ThreadRng) -> Color {
         if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -162,25 +178,21 @@ impl Camera {
 
         if !rec
             .material
-            .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut self.rng)
+            .scatter(ray, &rec, &mut attenuation, &mut scattered, rng)
         {
             return color_from_emission;
         }
 
-        let color_from_scatter = self.ray_color(&scattered, depth - 1, world) * attenuation;
+        let color_from_scatter = self.ray_color(&scattered, depth - 1, world, rng) * attenuation;
         color_from_scatter + color_from_emission
     }
 
-    fn sample_square(&mut self) -> Vec3 {
-        Vec3::new(
-            random_number01(&mut self.rng) - 0.5,
-            random_number01(&mut self.rng) - 0.5,
-            0.0,
-        )
+    fn sample_square(&self, rng: &mut ThreadRng) -> Vec3 {
+        Vec3::new(random_number01(rng) - 0.5, random_number01(rng) - 0.5, 0.0)
     }
 
-    fn defocus_disk_sample(&mut self) -> Vec3 {
-        let p = random_in_unit_disk(&mut self.rng);
+    fn defocus_disk_sample(&self, rng: &mut ThreadRng) -> Vec3 {
+        let p = random_in_unit_disk(rng);
 
         self.center + (self.defocus_disk_u * p.x()) + (self.defocus_disk_v * p.y())
     }

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
 
@@ -34,15 +34,15 @@ impl Texture for SolidColor {
 
 pub struct CheckerTexture {
     inv_scale: f64,
-    even: Box<dyn Texture>,
-    odd: Box<dyn Texture>,
+    even: Arc<dyn Texture + Send + Sync>,
+    odd: Arc<dyn Texture + Send + Sync>,
 }
 
 impl CheckerTexture {
     pub fn new(scale: f64, even: Color, odd: Color) -> Self {
         let inv_scale = 1.0 / scale;
-        let even = Box::new(SolidColor::from(even));
-        let odd = Box::new(SolidColor::from(odd));
+        let even = Arc::new(SolidColor::from(even));
+        let odd = Arc::new(SolidColor::from(odd));
 
         Self {
             inv_scale,
@@ -51,7 +51,11 @@ impl CheckerTexture {
         }
     }
 
-    pub fn from(scale: f64, even: Box<dyn Texture>, odd: Box<dyn Texture>) -> Self {
+    pub fn from(
+        scale: f64,
+        even: Arc<dyn Texture + Send + Sync>,
+        odd: Arc<dyn Texture + Send + Sync>,
+    ) -> Self {
         let inv_scale = 1.0 / scale;
 
         Self {

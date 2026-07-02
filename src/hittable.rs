@@ -1,4 +1,4 @@
-use std::{f64::INFINITY, rc::Rc};
+use std::{f64::INFINITY, sync::Arc};
 
 use crate::{
     aabb::AABB,
@@ -14,7 +14,7 @@ pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub front_face: bool,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material + Send + Sync>,
     pub u: f64,
     pub v: f64,
 }
@@ -22,7 +22,7 @@ pub struct HitRecord {
 impl Default for HitRecord {
     fn default() -> Self {
         Self {
-            material: Rc::new(Lambertian::default()),
+            material: Arc::new(Lambertian::default()),
             t: 0.0,
             p: Point3::default(),
             normal: Vec3::default(),
@@ -51,13 +51,13 @@ pub trait Hittable {
 }
 
 pub struct Translate {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable + Send + Sync>,
     offset: Vec3,
     bbox: AABB,
 }
 
 impl Translate {
-    pub fn new(object: Rc<dyn Hittable>, offset: Vec3) -> Self {
+    pub fn new(object: Arc<dyn Hittable + Send + Sync>, offset: Vec3) -> Self {
         let bbox = *object.bounding_box() + offset;
         Self {
             object,
@@ -89,14 +89,14 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable + Send + Sync>,
     cos_theta: f64,
     sin_theta: f64,
     bbox: AABB,
 }
 
 impl RotateY {
-    pub fn new(object: Rc<dyn Hittable>, theta: f64) -> Self {
+    pub fn new(object: Arc<dyn Hittable + Send + Sync>, theta: f64) -> Self {
         let rad_theta = theta.to_radians();
 
         let cos_theta = rad_theta.cos();

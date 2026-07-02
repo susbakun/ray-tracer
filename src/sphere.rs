@@ -1,5 +1,5 @@
 use std::f64::consts::PI;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
@@ -12,12 +12,16 @@ use crate::vector::{Point3, Vec3};
 pub struct Sphere {
     center: Ray,
     radius: f64,
-    material: Rc<dyn Material>,
+    material: Arc<dyn Material + Send + Sync>,
     bbox: AABB,
 }
 
 impl Sphere {
-    pub fn new_stationary(static_center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
+    pub fn new_stationary(
+        static_center: Point3,
+        radius: f64,
+        material: Arc<dyn Material + Send + Sync>,
+    ) -> Self {
         let center = Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0));
         let radius = radius.max(0.0);
         let rvec = Point3::new(radius, radius, radius);
@@ -34,7 +38,7 @@ impl Sphere {
         center1: Point3,
         center2: Point3,
         radius: f64,
-        material: Rc<dyn Material>,
+        material: Arc<dyn Material + Send + Sync>,
     ) -> Self {
         let radius = radius.max(0.0);
 
@@ -86,7 +90,7 @@ impl Hittable for Sphere {
         let outward_normal = (rec.p - current_center) / self.radius;
         rec.set_face_normal(ray, outward_normal);
         Self::set_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
-        rec.material = Rc::clone(&self.material);
+        rec.material = Arc::clone(&self.material);
 
         true
     }

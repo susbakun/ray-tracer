@@ -874,6 +874,7 @@ dependencies = [
  "image",
  "indicatif",
  "rand 0.10.1",
+ "rayon",
 ]
 
 [[package]]

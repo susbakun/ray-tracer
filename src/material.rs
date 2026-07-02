@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use rand::rngs::ThreadRng;
 
@@ -29,24 +29,24 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Default for Lambertian {
     fn default() -> Self {
         Self {
-            tex: Rc::new(SolidColor::new(0.0, 0.0, 0.0)),
+            tex: Arc::new(SolidColor::new(0.0, 0.0, 0.0)),
         }
     }
 }
 
 impl Lambertian {
     pub fn new(albedo: Color) -> Self {
-        let tex = Rc::new(SolidColor::from(albedo));
+        let tex = Arc::new(SolidColor::from(albedo));
         Self { tex }
     }
 
-    pub fn from(tex: Rc<dyn Texture>) -> Self {
+    pub fn from(tex: Arc<dyn Texture + Send + Sync>) -> Self {
         Self { tex }
     }
 }
@@ -154,16 +154,16 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture + Send + Sync>,
 }
 
 impl DiffuseLight {
-    pub fn new(tex: Rc<dyn Texture>) -> Self {
+    pub fn new(tex: Arc<dyn Texture + Send + Sync>) -> Self {
         Self { tex }
     }
 
     pub fn from_color(color: Color) -> Self {
-        let tex = Rc::new(SolidColor::from(color));
+        let tex = Arc::new(SolidColor::from(color));
 
         Self { tex }
     }
@@ -176,17 +176,17 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Isotropic {
     pub fn new(albedo: Color) -> Self {
-        let tex = Rc::new(SolidColor::from(albedo));
+        let tex = Arc::new(SolidColor::from(albedo));
 
         Self { tex }
     }
 
-    pub fn from(tex: Rc<dyn Texture>) -> Self {
+    pub fn from(tex: Arc<dyn Texture + Send + Sync>) -> Self {
         Self { tex }
     }
 }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     aabb::AABB,
@@ -22,16 +22,16 @@ pub struct Quad {
     // n.p for each point on the plane
     d: f64,
     w: Vec3,
-    mat: Rc<dyn Material>,
+    mat: Arc<dyn Material + Send + Sync>,
     bbox: AABB,
 }
 
 impl Quad {
-    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
         Self::set_bounding_box(q, u, v, mat)
     }
 
-    fn set_bounding_box(q: Point3, u: Vec3, v: Vec3, mat: Rc<dyn Material>) -> Self {
+    fn set_bounding_box(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
         let bbox_diagonal1 = AABB::from_point(q, q + u + v);
         let bbox_diagonal2 = AABB::from_point(q + u, q + v);
 
@@ -68,7 +68,7 @@ impl Quad {
     }
 }
 
-pub fn create_box(a: Point3, b: Point3, mat: Rc<dyn Material>) -> HittableList {
+pub fn create_box(a: Point3, b: Point3, mat: Arc<dyn Material + Send + Sync>) -> HittableList {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
     let mut sides = HittableList::new();
 
@@ -81,42 +81,42 @@ pub fn create_box(a: Point3, b: Point3, mat: Rc<dyn Material>) -> HittableList {
     let dz = Vec3::new(0.0, 0.0, max.z() - min.z());
 
     // front
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), max.z()),
         dx,
         dy,
         mat.clone(),
     )));
     // right
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), max.z()),
         -dz,
         dy,
         mat.clone(),
     )));
     // back
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), min.z()),
         -dx,
         dy,
         mat.clone(),
     )));
     // left
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dz,
         dy,
         mat.clone(),
     )));
     // top
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), max.y(), max.z()),
         dx,
         -dz,
         mat.clone(),
     )));
     // bottom
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dx,
         dz,

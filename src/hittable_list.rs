@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     aabb::{self, AABB},
@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
     bbox: AABB,
 }
 
@@ -19,13 +19,13 @@ impl HittableList {
         }
     }
 
-    pub fn from(obj: Rc<dyn Hittable>) -> Self {
+    pub fn from(obj: Arc<dyn Hittable + Send + Sync>) -> Self {
         let mut hl = Self::new();
         hl.add(obj);
         hl
     }
 
-    pub fn add(&mut self, obj: Rc<dyn Hittable>) {
+    pub fn add(&mut self, obj: Arc<dyn Hittable + Send + Sync>) {
         // update aabb of objects
         self.bbox = AABB::from_boxes(&self.bbox, obj.bounding_box());
         // and then push the obj to the list

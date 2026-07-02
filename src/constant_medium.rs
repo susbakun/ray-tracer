@@ -1,4 +1,4 @@
-use std::{f64::INFINITY, rc::Rc};
+use std::{f64::INFINITY, sync::Arc};
 
 use crate::{
     aabb::AABB,
@@ -13,15 +13,19 @@ use crate::{
 };
 
 pub struct ConstantMedium {
-    boundry: Rc<dyn Hittable>,
+    boundry: Arc<dyn Hittable + Send + Sync>,
     neg_inv_density: f64,
-    phase_function: Rc<dyn Material>,
+    phase_function: Arc<dyn Material + Send + Sync>,
 }
 
 impl ConstantMedium {
-    pub fn new(boundry: Rc<dyn Hittable>, density: f64, tex: Rc<dyn Texture>) -> Self {
+    pub fn new(
+        boundry: Arc<dyn Hittable + Send + Sync>,
+        density: f64,
+        tex: Arc<dyn Texture + Send + Sync>,
+    ) -> Self {
         let neg_inv_density = -1.0 / density;
-        let phase_function = Rc::new(Isotropic::from(tex));
+        let phase_function = Arc::new(Isotropic::from(tex));
 
         Self {
             boundry,
@@ -30,9 +34,13 @@ impl ConstantMedium {
         }
     }
 
-    pub fn from_color(boundry: Rc<dyn Hittable>, density: f64, color: Color) -> Self {
+    pub fn from_color(
+        boundry: Arc<dyn Hittable + Send + Sync>,
+        density: f64,
+        color: Color,
+    ) -> Self {
         let neg_inv_density = -1.0 / density;
-        let phase_function = Rc::new(Isotropic::new(color));
+        let phase_function = Arc::new(Isotropic::new(color));
 
         Self {
             boundry,
