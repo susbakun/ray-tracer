@@ -582,7 +582,7 @@ fn final_scene(image_width: u64, samples_per_pixel: u64, max_depth: u64) -> Resu
     )));
 
     let center1 = Point3::new(400.0, 400.0, 400.0);
-    let center2 = Vec3::new(30.0, 0.0, 0.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
     let sphere_material = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.1)));
     world.add(Rc::new(Sphere::new_moving(
         center1,
@@ -678,7 +678,7 @@ fn final_scene(image_width: u64, samples_per_pixel: u64, max_depth: u64) -> Resu
 }
 
 fn main() -> Result<()> {
-    let scene = 8;
+    let scene = 9;
     match scene {
         1 => bouncing_sphere(),
         2 => checked_spheres(),
