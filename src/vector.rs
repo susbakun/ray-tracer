@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::prelude::{Cross, Dot};
+use crate::prelude::*;
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Vec3 {

@@ -2,7 +2,7 @@ use rand::{RngExt, rngs::ThreadRng};
 
 use crate::{
     interval::Interval,
-    prelude::Dot,
+    prelude::*,
     vector::{Point3, Vec3},
 };
 

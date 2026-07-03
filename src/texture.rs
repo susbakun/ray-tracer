@@ -3,7 +3,8 @@ use std::{path::Path, sync::Arc};
 use anyhow::Result;
 
 use crate::{
-    color::Color, interval::Interval, perlin::Perlin, rtw_image::RTWImage, vector::Point3,
+    color::Color, interval::Interval, perlin::Perlin, prelude::*, rtw_image::RTWImage,
+    vector::Point3,
 };
 
 pub trait Texture {
@@ -34,8 +35,8 @@ impl Texture for SolidColor {
 
 pub struct CheckerTexture {
     inv_scale: f64,
-    even: Arc<dyn Texture + Send + Sync>,
-    odd: Arc<dyn Texture + Send + Sync>,
+    even: TextureType,
+    odd: TextureType,
 }
 
 impl CheckerTexture {
@@ -51,11 +52,7 @@ impl CheckerTexture {
         }
     }
 
-    pub fn from(
-        scale: f64,
-        even: Arc<dyn Texture + Send + Sync>,
-        odd: Arc<dyn Texture + Send + Sync>,
-    ) -> Self {
+    pub fn from(scale: f64, even: TextureType, odd: TextureType) -> Self {
         let inv_scale = 1.0 / scale;
 
         Self {

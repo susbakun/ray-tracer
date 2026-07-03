@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
 use crate::{
     aabb::AABB,
     hittable::Hittable,
-    material::Material,
     matrix::Matrix,
-    prelude::Cross,
+    prelude::{Cross, MaterialType},
     vector::{Point3, Vec3},
 };
 
@@ -14,21 +11,16 @@ pub struct Triangle {
     p1: Point3,
     p2: Point3,
     normal: Vec3,
-    mat: Arc<dyn Material + Send + Sync>,
+    mat: MaterialType,
     bbox: AABB,
 }
 
 impl Triangle {
-    pub fn new(p0: Point3, p1: Point3, p2: Point3, mat: Arc<dyn Material + Send + Sync>) -> Self {
+    pub fn new(p0: Point3, p1: Point3, p2: Point3, mat: MaterialType) -> Self {
         Self::set_bounding_box(p0, p1, p2, mat)
     }
 
-    fn set_bounding_box(
-        p0: Point3,
-        p1: Point3,
-        p2: Point3,
-        mat: Arc<dyn Material + Send + Sync>,
-    ) -> Self {
+    fn set_bounding_box(p0: Point3, p1: Point3, p2: Point3, mat: MaterialType) -> Self {
         let bbox_diagonal1 = AABB::from_point(p0, p1);
         let bbox_diagonal2 = AABB::from_point(p0, p2);
         let bbox = AABB::from_boxes(&bbox_diagonal1, &bbox_diagonal2);

@@ -7,12 +7,13 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
+    prelude::*,
     ray::Ray,
 };
 
 pub struct BVH {
-    left: Arc<dyn Hittable + Send + Sync>,
-    right: Arc<dyn Hittable + Send + Sync>,
+    left: HittableType,
+    right: HittableType,
     bbox: AABB,
 }
 
@@ -24,7 +25,7 @@ impl BVH {
     }
 
     fn build_tree(
-        objects: &mut Vec<Arc<dyn Hittable + Send + Sync>>,
+        objects: &mut Vec<HittableType>,
         start: usize,
         end: usize,
         rng: &mut ThreadRng,
@@ -64,35 +65,22 @@ impl BVH {
         Self { left, right, bbox }
     }
 
-    fn box_compare(
-        a: &Arc<dyn Hittable + Send + Sync>,
-        b: &Arc<dyn Hittable + Send + Sync>,
-        axis: u8,
-    ) -> Ordering {
+    fn box_compare(a: &HittableType, b: &HittableType, axis: u8) -> Ordering {
         let a_axis_interval = a.bounding_box().axis_interval(axis);
         let b_axis_interval = b.bounding_box().axis_interval(axis);
 
         a_axis_interval.min.total_cmp(&b_axis_interval.min)
     }
 
-    fn box_x_compare(
-        a: &Arc<dyn Hittable + Send + Sync>,
-        b: &Arc<dyn Hittable + Send + Sync>,
-    ) -> Ordering {
+    fn box_x_compare(a: &HittableType, b: &HittableType) -> Ordering {
         Self::box_compare(a, b, 0)
     }
 
-    fn box_y_compare(
-        a: &Arc<dyn Hittable + Send + Sync>,
-        b: &Arc<dyn Hittable + Send + Sync>,
-    ) -> Ordering {
+    fn box_y_compare(a: &HittableType, b: &HittableType) -> Ordering {
         Self::box_compare(a, b, 1)
     }
 
-    fn box_z_compare(
-        a: &Arc<dyn Hittable + Send + Sync>,
-        b: &Arc<dyn Hittable + Send + Sync>,
-    ) -> Ordering {
+    fn box_z_compare(a: &HittableType, b: &HittableType) -> Ordering {
         Self::box_compare(a, b, 2)
     }
 }

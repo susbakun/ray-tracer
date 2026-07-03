@@ -5,8 +5,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    material::Material,
-    prelude::{Cross, Dot},
+    prelude::*,
     ray::Ray,
     vector::{Point3, Vec3},
 };
@@ -22,16 +21,16 @@ pub struct Quad {
     // n.p for each point on the plane
     d: f64,
     w: Vec3,
-    mat: Arc<dyn Material + Send + Sync>,
+    mat: MaterialType,
     bbox: AABB,
 }
 
 impl Quad {
-    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
+    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: MaterialType) -> Self {
         Self::set_bounding_box(q, u, v, mat)
     }
 
-    fn set_bounding_box(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
+    fn set_bounding_box(q: Point3, u: Vec3, v: Vec3, mat: MaterialType) -> Self {
         let bbox_diagonal1 = AABB::from_point(q, q + u + v);
         let bbox_diagonal2 = AABB::from_point(q + u, q + v);
 
@@ -68,7 +67,7 @@ impl Quad {
     }
 }
 
-pub fn create_box(a: Point3, b: Point3, mat: Arc<dyn Material + Send + Sync>) -> HittableList {
+pub fn create_box(a: Point3, b: Point3, mat: MaterialType) -> HittableList {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
     let mut sides = HittableList::new();
 

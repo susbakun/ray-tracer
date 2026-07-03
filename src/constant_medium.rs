@@ -5,25 +5,20 @@ use crate::{
     color::Color,
     hittable::{HitRecord, Hittable},
     interval::{self, Interval},
-    material::{Isotropic, Material},
-    prelude::random_number01,
+    material::Isotropic,
+    prelude::*,
     ray::Ray,
-    texture::Texture,
     vector::Vec3,
 };
 
 pub struct ConstantMedium {
-    boundry: Arc<dyn Hittable + Send + Sync>,
+    boundry: HittableType,
     neg_inv_density: f64,
-    phase_function: Arc<dyn Material + Send + Sync>,
+    phase_function: MaterialType,
 }
 
 impl ConstantMedium {
-    pub fn new(
-        boundry: Arc<dyn Hittable + Send + Sync>,
-        density: f64,
-        tex: Arc<dyn Texture + Send + Sync>,
-    ) -> Self {
+    pub fn new(boundry: HittableType, density: f64, tex: TextureType) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Arc::new(Isotropic::from(tex));
 
@@ -34,11 +29,7 @@ impl ConstantMedium {
         }
     }
 
-    pub fn from_color(
-        boundry: Arc<dyn Hittable + Send + Sync>,
-        density: f64,
-        color: Color,
-    ) -> Self {
+    pub fn from_color(boundry: HittableType, density: f64, color: Color) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Arc::new(Isotropic::new(color));
 

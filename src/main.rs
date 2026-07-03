@@ -9,11 +9,11 @@ use crate::{
     camera::Camera,
     color::Color,
     constant_medium::ConstantMedium,
-    hittable::{Hittable, RotateY, Translate},
+    hittable::{RotateY, Translate},
     hittable_list::HittableList,
     interval::Interval,
     material::{Dielectric, DiffuseLight, Lambertian, Metal},
-    prelude::{random_number_range, random_number01, random_vector_range, random_vector01},
+    prelude::*,
     quad::{Quad, create_box},
     sphere::Sphere,
     texture::{CheckerTexture, ImageTexture, NoiseTexture},
@@ -31,6 +31,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod matrix;
+mod mesh;
 mod perlin;
 mod prelude;
 mod quad;
@@ -430,7 +431,7 @@ fn cornell_box() -> Result<()> {
     )));
 
     // boxes
-    let mut box1: Arc<dyn Hittable + Send + Sync> = Arc::new(create_box(
+    let mut box1: HittableType = Arc::new(create_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
         white.clone(),
@@ -439,7 +440,7 @@ fn cornell_box() -> Result<()> {
     box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
     world.add(box1);
 
-    let mut box2: Arc<dyn Hittable + Send + Sync> = Arc::new(create_box(
+    let mut box2: HittableType = Arc::new(create_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
         white.clone(),
@@ -517,7 +518,7 @@ fn cornell_smoke() -> Result<()> {
     )));
 
     // boxes
-    let mut box1: Arc<dyn Hittable + Send + Sync> = Arc::new(create_box(
+    let mut box1: HittableType = Arc::new(create_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
         white.clone(),
@@ -525,7 +526,7 @@ fn cornell_smoke() -> Result<()> {
     box1 = Arc::new(RotateY::new(box1, 15.0));
     box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
 
-    let mut box2: Arc<dyn Hittable + Send + Sync> = Arc::new(create_box(
+    let mut box2: HittableType = Arc::new(create_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
         white.clone(),

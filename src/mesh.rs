@@ -2,47 +2,52 @@ use crate::{
     aabb::{self, AABB},
     hittable::{HitRecord, Hittable},
     interval::Interval,
-    prelude::*,
+    triangle::Triangle,
 };
 
-pub struct HittableList {
-    pub objects: Vec<HittableType>,
+struct Mesh {
+    triangles: Vec<Triangle>,
     bbox: AABB,
 }
 
-impl HittableList {
-    pub fn new() -> Self {
+impl Mesh {
+    fn new() -> Self {
         Self {
-            objects: vec![],
+            triangles: vec![],
             bbox: aabb::EMPTY,
         }
     }
 
-    pub fn from(obj: HittableType) -> Self {
-        let mut hl = Self::new();
-        hl.add(obj);
-        hl
+    fn from(triangle: Triangle) -> Self {
+        let mut mesh = Mesh::new();
+        mesh.add(triangle);
+        mesh
     }
 
-    pub fn add(&mut self, obj: HittableType) {
+    fn add(&mut self, triangle: Triangle) {
         // update aabb of objects
-        self.bbox = AABB::from_boxes(&self.bbox, obj.bounding_box());
+        self.bbox = AABB::from_boxes(&self.bbox, triangle.bounding_box());
         // and then push the obj to the list
-        self.objects.push(obj);
+        self.triangles.push(triangle);
     }
 
     pub fn clear(&mut self) {
-        self.objects.clear()
+        self.triangles.clear()
     }
 }
 
-impl Hittable for HittableList {
-    fn hit(&self, ray: &crate::ray::Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+impl Hittable for Mesh {
+    fn hit(
+        &self,
+        ray: &crate::ray::Ray,
+        ray_t: &mut crate::interval::Interval,
+        rec: &mut crate::hittable::HitRecord,
+    ) -> bool {
         let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
 
-        for obj in &self.objects {
+        for obj in &self.triangles {
             let mut interval = Interval::new(ray_t.min, closest_so_far);
 
             if obj.hit(ray, &mut interval, &mut temp_rec) {

@@ -3,12 +3,7 @@ use std::sync::Arc;
 use rand::rngs::ThreadRng;
 
 use crate::{
-    color::Color,
-    hittable::HitRecord,
-    prelude::{Dot, random_number01, random_unit_vector},
-    ray::Ray,
-    texture::{SolidColor, Texture},
-    vector::Point3,
+    color::Color, hittable::HitRecord, prelude::*, ray::Ray, texture::SolidColor, vector::Point3,
 };
 
 pub trait Material {
@@ -29,7 +24,7 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    tex: Arc<dyn Texture + Send + Sync>,
+    tex: TextureType,
 }
 
 impl Default for Lambertian {
@@ -46,7 +41,7 @@ impl Lambertian {
         Self { tex }
     }
 
-    pub fn from(tex: Arc<dyn Texture + Send + Sync>) -> Self {
+    pub fn from(tex: TextureType) -> Self {
         Self { tex }
     }
 }
@@ -154,11 +149,11 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    tex: Arc<dyn Texture + Send + Sync>,
+    tex: TextureType,
 }
 
 impl DiffuseLight {
-    pub fn new(tex: Arc<dyn Texture + Send + Sync>) -> Self {
+    pub fn new(tex: TextureType) -> Self {
         Self { tex }
     }
 
@@ -176,7 +171,7 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    tex: Arc<dyn Texture + Send + Sync>,
+    tex: TextureType,
 }
 
 impl Isotropic {
@@ -186,7 +181,7 @@ impl Isotropic {
         Self { tex }
     }
 
-    pub fn from(tex: Arc<dyn Texture + Send + Sync>) -> Self {
+    pub fn from(tex: TextureType) -> Self {
         Self { tex }
     }
 }

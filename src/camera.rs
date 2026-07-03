@@ -13,7 +13,7 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    prelude::{Cross, random_in_unit_disk, random_number01},
+    prelude::*,
     ray::Ray,
     vector::{Point3, Vec3},
 };

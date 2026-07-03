@@ -4,24 +4,19 @@ use std::sync::Arc;
 use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::material::Material;
-use crate::prelude::Dot;
+use crate::prelude::{Dot, MaterialType};
 use crate::ray::Ray;
 use crate::vector::{Point3, Vec3};
 
 pub struct Sphere {
     center: Ray,
     radius: f64,
-    material: Arc<dyn Material + Send + Sync>,
+    material: MaterialType,
     bbox: AABB,
 }
 
 impl Sphere {
-    pub fn new_stationary(
-        static_center: Point3,
-        radius: f64,
-        material: Arc<dyn Material + Send + Sync>,
-    ) -> Self {
+    pub fn new_stationary(static_center: Point3, radius: f64, material: MaterialType) -> Self {
         let center = Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0));
         let radius = radius.max(0.0);
         let rvec = Point3::new(radius, radius, radius);
@@ -38,7 +33,7 @@ impl Sphere {
         center1: Point3,
         center2: Point3,
         radius: f64,
-        material: Arc<dyn Material + Send + Sync>,
+        material: MaterialType,
     ) -> Self {
         let radius = radius.max(0.0);
 
