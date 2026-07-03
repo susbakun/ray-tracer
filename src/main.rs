@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::sync::Arc;
+use std::{cmp::Ordering, sync::Arc};
 
 use anyhow::Result;
 use rand::rng;
@@ -17,6 +17,7 @@ use crate::{
     quad::{Quad, create_box},
     sphere::Sphere,
     texture::{CheckerTexture, ImageTexture, NoiseTexture},
+    triangle::Triangle,
     vector::{Point3, Vec3},
 };
 
@@ -29,6 +30,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod matrix;
 mod perlin;
 mod prelude;
 mod quad;
@@ -36,7 +38,14 @@ mod ray;
 mod rtw_image;
 mod sphere;
 mod texture;
+mod triangle;
 mod vector;
+
+#[derive(Default, Clone, Copy)]
+struct Sample {
+    x: f64,
+    p_x: f64,
+}
 
 fn bouncing_sphere() -> Result<()> {
     let mut rng = rng();
@@ -148,6 +157,7 @@ fn bouncing_sphere() -> Result<()> {
 fn checked_spheres() -> Result<()> {
     let mut world = HittableList::new();
 
+    // sphere
     let checker = Arc::new(CheckerTexture::new(
         0.32,
         Color::new(0.2, 0.3, 0.1),
@@ -165,6 +175,7 @@ fn checked_spheres() -> Result<()> {
         Arc::new(Lambertian::from(checker.clone())),
     )));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
@@ -188,12 +199,14 @@ fn checked_spheres() -> Result<()> {
 fn earth() -> Result<()> {
     let mut world = HittableList::new();
 
+    // earth
     let earth_texture = ImageTexture::new("earthmap.jpg")?;
     let earth_surface = Arc::new(Lambertian::from(Arc::new(earth_texture)));
     let globe = Sphere::new_stationary(Point3::new(0.0, 0.0, 0.0), 2.0, earth_surface);
 
     world.add(Arc::new(globe));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
@@ -217,6 +230,7 @@ fn earth() -> Result<()> {
 fn perlin_spheres() -> Result<()> {
     let mut world = HittableList::new();
 
+    // perlin sphere
     let pertext = Arc::new(NoiseTexture::new(4.0));
     let lamper = Arc::new(Lambertian::from(pertext));
 
@@ -231,6 +245,7 @@ fn perlin_spheres() -> Result<()> {
         lamper.clone(),
     )));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
@@ -293,6 +308,7 @@ fn quads() -> Result<()> {
         lower_teal,
     )));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 1.0;
     camera.image_width = 400;
@@ -331,6 +347,7 @@ fn simple_light() -> Result<()> {
         lamper.clone(),
     )));
 
+    // light
     let difflight = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
     world.add(Arc::new(Sphere::new_stationary(
         Point3::new(0.0, 7.0, 0.0),
@@ -344,6 +361,7 @@ fn simple_light() -> Result<()> {
         difflight.clone(),
     )));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
@@ -373,6 +391,7 @@ fn cornell_box() -> Result<()> {
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::from_color(Color::new(15.0, 15.0, 15.0)));
 
+    // cornell box sides
     world.add(Arc::new(Quad::new(
         Point3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 555.0, 0.0),
@@ -429,6 +448,7 @@ fn cornell_box() -> Result<()> {
     box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
     world.add(box2);
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 1.0;
     camera.image_width = 600;
@@ -458,6 +478,7 @@ fn cornell_smoke() -> Result<()> {
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::from_color(Color::new(7.0, 7.0, 7.0)));
 
+    // cornell box sides
     world.add(Arc::new(Quad::new(
         Point3::new(555.0, 0.0, 0.0),
         Vec3::new(0.0, 555.0, 0.0),
@@ -523,6 +544,7 @@ fn cornell_smoke() -> Result<()> {
         Color::new(1.0, 1.0, 1.0),
     )));
 
+    // camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 1.0;
     camera.image_width = 600;
@@ -677,8 +699,44 @@ fn final_scene(image_width: u64, samples_per_pixel: u64, max_depth: u64) -> Resu
     Ok(())
 }
 
+fn compare_by_x(a: &Sample, b: &Sample) -> Ordering {
+    a.x.total_cmp(&b.x)
+}
+
+fn triangle_scene() -> Result<()> {
+    let mut world = HittableList::new();
+
+    let triangle_mat = Arc::new(Lambertian::new(Color::new(0.9, 0.2, 0.1)));
+
+    world.add(Arc::new(Triangle::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(0.5, 1.0, 0.0),
+        Point3::new(1.0, 0.0, 0.0),
+        triangle_mat,
+    )));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+    camera.background_color = Color::new(0.7, 0.8, 1.0);
+
+    camera.vfov = 80.0;
+    camera.lookfrom = Point3::new(0.0, 0.0, 3.0);
+    camera.lookat = Point3::new(0.0, 0.0, -1.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 20.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    let scene = 9;
+    let scene = 10;
     match scene {
         1 => bouncing_sphere(),
         2 => checked_spheres(),
@@ -689,6 +747,7 @@ fn main() -> Result<()> {
         7 => cornell_box(),
         8 => cornell_smoke(),
         9 => final_scene(800, 10000, 40),
+        10 => triangle_scene(),
         _ => final_scene(400, 250, 4),
     }
 }

@@ -20,28 +20,30 @@ use crate::{
 
 #[derive(Default)]
 pub struct Camera {
-    pub aspect_ratio: f64,
     pub image_width: u64,
+    image_height: u64,
+    pub aspect_ratio: f64,
     pub samples_per_pixel: u64,
+    sqrt_spp: usize,     // Square root of number of samples per pixel
+    recip_sqrt_spp: f64, // 1 / sqrt_spp
     pub max_depth: u64,
     pub vfov: f64,
     pub vup: Vec3,
     pub lookfrom: Point3,
-    pub lookat: Point3,
-    pub defocus_angle: f64,
-    pub focus_dist: f64,
-    pub background_color: Color,
-    image_height: u64,
-    center: Point3,
-    pixel00_lc: Point3,
-    pixel_delta_u: Vec3,
-    pixel_delta_v: Vec3,
-    pixel_samples_scale: f64,
     u: Vec3,
     v: Vec3,
     w: Vec3,
+    pub lookat: Point3,
+    center: Point3,
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
+    pixel00_lc: Point3,
+    pixel_delta_u: Vec3,
+    pixel_delta_v: Vec3,
+    pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    pub background_color: Color,
 }
 
 impl Camera {
@@ -50,7 +52,11 @@ impl Camera {
         self.image_height = ((self.image_width as f64) / self.aspect_ratio) as u64;
 
         self.center = self.lookfrom;
-        self.pixel_samples_scale = 1.0 / (self.samples_per_pixel as f64);
+
+        let sqrt_spp = (self.samples_per_pixel as f64).sqrt();
+        self.pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp);
+        self.recip_sqrt_spp = 1.0 / sqrt_spp;
+        self.sqrt_spp = sqrt_spp as usize;
 
         // viewport dimensions
         let theta = self.vfov.to_radians();
@@ -119,10 +125,13 @@ impl Camera {
 
                 for (i, col) in row.iter_mut().enumerate() {
                     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                    for _ in 0..self.samples_per_pixel {
-                        let ray = self.get_ray(i as f64, j as f64, &mut rng);
-                        let color = self.ray_color(&ray, self.max_depth, world, &mut rng);
-                        pixel_color += color;
+                    for s_j in 0..self.sqrt_spp {
+                        for s_i in 0..self.sqrt_spp {
+                            let ray =
+                                self.get_ray(i as f64, j as f64, s_i as f64, s_j as f64, &mut rng);
+                            let color = self.ray_color(&ray, self.max_depth, world, &mut rng);
+                            pixel_color += color;
+                        }
                     }
                     pixel_color *= self.pixel_samples_scale;
 
@@ -140,8 +149,11 @@ impl Camera {
         Ok(())
     }
 
-    fn get_ray(&self, i: f64, j: f64, rng: &mut ThreadRng) -> Ray {
-        let offset = self.sample_square(rng);
+    fn get_ray(&self, i: f64, j: f64, s_i: f64, s_j: f64, rng: &mut ThreadRng) -> Ray {
+        // Construct a camera ray originating from the defocus disk and directed at a randomly
+        // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
+
+        let offset = self.sample_square_stratified(s_i, s_j, rng);
         let pixel_sample = self.pixel00_lc
             + (self.pixel_delta_u * (offset.x() + i))
             + (self.pixel_delta_v * (offset.y() + j));
@@ -187,7 +199,17 @@ impl Camera {
         color_from_scatter + color_from_emission
     }
 
-    fn sample_square(&self, rng: &mut ThreadRng) -> Vec3 {
+    fn sample_square_stratified(&self, s_i: f64, s_j: f64, rng: &mut ThreadRng) -> Vec3 {
+        // Returns the vector to a random point in the square sub-pixel specified by grid
+        // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+
+        let px = ((s_i + random_number01(rng)) * self.recip_sqrt_spp) - 0.5;
+        let py = ((s_j + random_number01(rng)) * self.recip_sqrt_spp) - 0.5;
+
+        Vec3::new(px, py, 0.0)
+    }
+
+    fn sample_square(rng: &mut ThreadRng) -> Vec3 {
         Vec3::new(random_number01(rng) - 0.5, random_number01(rng) - 0.5, 0.0)
     }
 
