@@ -5,10 +5,9 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    material::Metal,
-    prelude::{HittableType, MODELS_DIR},
+    prelude::{HittableType, MODELS_DIR, MaterialType, UV},
     triangle::Triangle,
-    vector::Point3,
+    vector::{Point3, Vec3},
 };
 use anyhow::Result;
 use std::{
@@ -22,7 +21,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(file_name: impl AsRef<Path>) -> Result<Self> {
+    pub fn new(file_name: impl AsRef<Path>, material: MaterialType) -> Result<Self> {
         let file_dir = PathBuf::from(MODELS_DIR).join(file_name);
 
         let mut triangles = HittableList::new();
@@ -38,8 +37,6 @@ impl Model {
         // ignore material property for now
         let (models, _) = tobj::load_obj(file_dir, &options)?;
 
-        let mat = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-
         for model in models {
             let mesh = model.mesh;
 
@@ -52,7 +49,26 @@ impl Model {
                 let p1 = Self::vertex(&mesh.positions, j);
                 let p2 = Self::vertex(&mesh.positions, k);
 
-                let triangle = Triangle::new(p0, p1, p2, mat.clone());
+                let n0 = Self::vertex(&mesh.normals, i);
+                let n1 = Self::vertex(&mesh.normals, j);
+                let n2 = Self::vertex(&mesh.normals, k);
+
+                let uv0 = Self::get_uv(&mesh.texcoords, i);
+                let uv1 = Self::get_uv(&mesh.texcoords, j);
+                let uv2 = Self::get_uv(&mesh.texcoords, k);
+
+                let triangle = Triangle::new_with_normals_uvs(
+                    p0,
+                    p1,
+                    p2,
+                    material.clone(),
+                    n0,
+                    n1,
+                    n2,
+                    uv0,
+                    uv1,
+                    uv2,
+                );
 
                 triangles.add(Arc::new(triangle));
             }
@@ -63,14 +79,23 @@ impl Model {
         })
     }
 
-    fn vertex(positions: &Vec<f32>, index: usize) -> Point3 {
+    fn vertex(vector: &[f32], index: usize) -> Vec3 {
         let base = index * 3;
 
         Point3::new(
-            positions[base] as f64,
-            positions[base + 1] as f64,
-            positions[base + 2] as f64,
+            vector[base] as f64,
+            vector[base + 1] as f64,
+            vector[base + 2] as f64,
         )
+    }
+
+    fn get_uv(textcoords: &[f32], index: usize) -> UV {
+        let base = index * 2;
+
+        let u = textcoords[base] as f64;
+        let v = textcoords[base + 1] as f64;
+
+        UV { u, v }
     }
 }
 

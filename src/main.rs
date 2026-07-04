@@ -754,7 +754,7 @@ fn teapot_scene() -> Result<()> {
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
-    camera.samples_per_pixel = 100;
+    camera.samples_per_pixel = 400;
     camera.max_depth = 50;
     camera.background_color = Color::new(0.7, 0.8, 1.0);
 
