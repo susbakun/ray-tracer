@@ -1,7 +1,6 @@
 use crate::{
     aabb::AABB,
     bvh::BVH,
-    color::Color,
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,

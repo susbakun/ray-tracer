@@ -738,7 +738,9 @@ fn teapot_scene() -> Result<()> {
         ground,
     )));
 
-    let model = Model::new("utah_teapot.obj")?;
+    // Neutral gray, best for checking geometry/shading
+    let teapot_material = Arc::new(Lambertian::new(Color::new(0.65, 0.65, 0.65)));
+    let model = Model::new("utah_teapot.obj", teapot_material)?;
     let model = Arc::new(model);
 
     world.add(model);
