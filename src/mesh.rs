@@ -2,7 +2,7 @@ use crate::{
     aabb::{self, AABB},
     hittable::{HitRecord, Hittable},
     interval::Interval,
-    triangle::Triangle,
+    shape::Triangle,
 };
 
 pub struct Mesh {

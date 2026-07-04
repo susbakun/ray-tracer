@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 use crate::{
     interval::{self, Interval},
@@ -138,6 +138,14 @@ impl Add<Vec3> for AABB {
 
     fn add(self, rhs: Vec3) -> Self::Output {
         Self::new(self.x + rhs.x(), self.y + rhs.y(), self.z + rhs.z())
+    }
+}
+
+impl Mul<f64> for AABB {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::new(self.x * rhs, self.y * rhs, self.z * rhs)
     }
 }
 

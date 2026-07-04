@@ -5,7 +5,7 @@ use crate::{
     hittable_list::HittableList,
     interval::Interval,
     prelude::{HittableType, MODELS_DIR, MaterialType, UV},
-    triangle::Triangle,
+    shape::Triangle,
     vector::{Point3, Vec3},
 };
 use anyhow::Result;
@@ -48,10 +48,12 @@ impl Model {
                 let p1 = Self::vertex(&mesh.positions, j);
                 let p2 = Self::vertex(&mesh.positions, k);
 
+                // we assume normals are provided in obj file
                 let n0 = Self::vertex(&mesh.normals, i);
                 let n1 = Self::vertex(&mesh.normals, j);
                 let n2 = Self::vertex(&mesh.normals, k);
 
+                // we assume uv are provided in obj file
                 let uv0 = Self::get_uv(&mesh.texcoords, i);
                 let uv1 = Self::get_uv(&mesh.texcoords, j);
                 let uv2 = Self::get_uv(&mesh.texcoords, k);

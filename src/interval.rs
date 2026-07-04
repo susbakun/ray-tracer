@@ -1,4 +1,7 @@
-use std::{f64::INFINITY, ops::Add};
+use std::{
+    f64::INFINITY,
+    ops::{Add, Mul},
+};
 
 #[derive(Clone, Copy)]
 pub struct Interval {
@@ -63,6 +66,14 @@ impl Add<f64> for Interval {
 
     fn add(self, rhs: f64) -> Self::Output {
         Self::new(self.min + rhs, self.max + rhs)
+    }
+}
+
+impl Mul<f64> for Interval {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::new(self.min * rhs, self.max * rhs)
     }
 }
 
