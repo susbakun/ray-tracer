@@ -6,7 +6,6 @@ mod aabb;
 mod bvh;
 mod camera;
 mod color;
-mod constant_medium;
 mod hittable;
 mod hittable_list;
 mod interval;
