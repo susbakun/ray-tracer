@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::{cmp::Ordering, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use rand::rng;
@@ -13,6 +13,7 @@ use crate::{
     hittable_list::HittableList,
     interval::Interval,
     material::{Dielectric, DiffuseLight, Lambertian, Metal},
+    model::Model,
     prelude::*,
     quad::{Quad, create_box},
     sphere::Sphere,
@@ -32,6 +33,7 @@ mod interval;
 mod material;
 mod matrix;
 mod mesh;
+mod model;
 mod perlin;
 mod prelude;
 mod quad;
@@ -41,12 +43,6 @@ mod sphere;
 mod texture;
 mod triangle;
 mod vector;
-
-#[derive(Default, Clone, Copy)]
-struct Sample {
-    x: f64,
-    p_x: f64,
-}
 
 fn bouncing_sphere() -> Result<()> {
     let mut rng = rng();
@@ -700,10 +696,6 @@ fn final_scene(image_width: u64, samples_per_pixel: u64, max_depth: u64) -> Resu
     Ok(())
 }
 
-fn compare_by_x(a: &Sample, b: &Sample) -> Ordering {
-    a.x.total_cmp(&b.x)
-}
-
 fn triangle_scene() -> Result<()> {
     let mut world = HittableList::new();
 
@@ -736,8 +728,51 @@ fn triangle_scene() -> Result<()> {
     Ok(())
 }
 
+fn teapot_scene() -> Result<()> {
+    let mut world = HittableList::new();
+
+    let ground = Arc::new(Lambertian::new(Color::new(0.45, 0.45, 0.45)));
+    world.add(Arc::new(Sphere::new_stationary(
+        Point3::new(0.0, -1000.5, 0.0),
+        1000.0,
+        ground,
+    )));
+
+    let model = Model::new("utah_teapot.obj")?;
+    let model = Arc::new(model);
+
+    world.add(model);
+
+    let light = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, 4.0, -2.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        light,
+    )));
+
+    let mut camera = Camera::default();
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 400;
+    camera.samples_per_pixel = 100;
+    camera.max_depth = 50;
+    camera.background_color = Color::new(0.7, 0.8, 1.0);
+
+    camera.vfov = 80.0;
+    camera.lookfrom = Point3::new(0.0, 2.0, 5.0);
+    camera.lookat = Point3::new(0.0, 1.0, 0.0);
+    camera.vup = Vec3::new(0.0, 1.0, 0.0);
+
+    camera.defocus_angle = 0.0;
+    camera.focus_dist = 5.0;
+
+    camera.render(&world)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
-    let scene = 10;
+    let scene = 11;
     match scene {
         1 => bouncing_sphere(),
         2 => checked_spheres(),
@@ -749,6 +784,7 @@ fn main() -> Result<()> {
         8 => cornell_smoke(),
         9 => final_scene(800, 10000, 40),
         10 => triangle_scene(),
+        11 => teapot_scene(),
         _ => final_scene(400, 250, 4),
     }
 }

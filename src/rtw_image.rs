@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Result, anyhow};
 
-use crate::color::Color;
+use crate::{color::Color, prelude::TEXTURES_DIR};
 
 #[derive(Default)]
 pub struct RTWImage {
@@ -20,7 +20,7 @@ impl RTWImage {
     }
 
     pub fn load(&mut self, file_name: impl AsRef<Path>) -> Result<()> {
-        let path = PathBuf::from("./images").join(file_name);
+        let path = PathBuf::from(TEXTURES_DIR).join(file_name);
         let img = image::open(path)?;
         self.width = img.width() as usize;
         self.height = img.height() as usize;

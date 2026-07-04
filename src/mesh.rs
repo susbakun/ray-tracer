@@ -5,26 +5,26 @@ use crate::{
     triangle::Triangle,
 };
 
-struct Mesh {
+pub struct Mesh {
     triangles: Vec<Triangle>,
     bbox: AABB,
 }
 
 impl Mesh {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             triangles: vec![],
             bbox: aabb::EMPTY,
         }
     }
 
-    fn from(triangle: Triangle) -> Self {
+    pub fn from(triangle: Triangle) -> Self {
         let mut mesh = Mesh::new();
         mesh.add(triangle);
         mesh
     }
 
-    fn add(&mut self, triangle: Triangle) {
+    pub fn add(&mut self, triangle: Triangle) {
         // update aabb of objects
         self.bbox = AABB::from_boxes(&self.bbox, triangle.bounding_box());
         // and then push the obj to the list
